@@ -7,7 +7,7 @@ encoding utf-8
 Sheet 1 1
 Title "Deadbadger Picoballoon probe"
 Date ""
-Rev "0.1"
+Rev "0.2"
 Comp "Jakub Kaderka"
 Comment1 "Probe for Hvězdárna a planetárium Brno balloon challange"
 Comment2 ""
@@ -182,8 +182,6 @@ DIO1
 NoConn ~ 10600 2000
 NoConn ~ 10600 1900
 NoConn ~ 10600 1800
-Text Notes 8950 6450 0    50   ~ 0
-filtr na gps anténu, aby signál neusmažil čip
 $Comp
 L Regulator_Switching:MCP1640CH U2
 U 1 1 5C537A1F
@@ -903,17 +901,6 @@ Text Label 5300 5400 2    50   ~ 0
 DEBUG_RX
 Text Label 5300 5300 2    50   ~ 0
 DEBUG_TX
-$Comp
-L Connector_Generic:Conn_01x05 J2
-U 1 1 5C67011B
-P 4650 7300
-F 0 "J2" H 4730 7342 50  0000 L CNN
-F 1 "SWD" H 4730 7251 50  0000 L CNN
-F 2 "Connector_PinHeader_2.54mm:PinHeader_1x05_P2.54mm_Vertical" H 4650 7300 50  0001 C CNN
-F 3 "~" H 4650 7300 50  0001 C CNN
-	1    4650 7300
-	1    0    0    -1  
-$EndComp
 Wire Wire Line
 	4450 7100 4350 7100
 Wire Wire Line
@@ -1321,7 +1308,6 @@ NoConn ~ 7150 4900
 NoConn ~ 7150 5000
 NoConn ~ 7150 5400
 NoConn ~ 7150 5500
-NoConn ~ 5850 5600
 NoConn ~ 5850 5500
 NoConn ~ 5850 4300
 NoConn ~ 5850 4400
@@ -1450,10 +1436,194 @@ F 3 "" H 10350 5000 50  0001 C CNN
 $EndComp
 Wire Wire Line
 	10350 5000 10350 4950
-NoConn ~ 4450 7500
 Wire Wire Line
 	9050 4650 9650 4650
 NoConn ~ 7150 4700
+Text Label 5000 6200 0    50   ~ 0
+SCL
+$Comp
+L Sensor:MS5607-02BA U6
+U 1 1 5C5D4AEB
+P 9850 5750
+F 0 "U6" H 9950 6300 50  0000 L CNN
+F 1 "MS5607-02BA" H 9950 6200 50  0000 L CNN
+F 2 "Package_LGA:LGA-8_3x5mm_P1.25mm" H 9850 5750 50  0001 C CNN
+F 3 "http://www.farnell.com/datasheets/1756127.pdf" H 9850 5750 50  0001 C CNN
+	1    9850 5750
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:GND #PWR037
+U 1 1 5C5D4DF8
+P 9850 6300
+F 0 "#PWR037" H 9850 6050 50  0001 C CNN
+F 1 "GND" H 9855 6127 50  0000 C CNN
+F 2 "" H 9850 6300 50  0001 C CNN
+F 3 "" H 9850 6300 50  0001 C CNN
+	1    9850 6300
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	9850 6300 9850 6250
+$Comp
+L power:+3V3 #PWR036
+U 1 1 5C5F5633
+P 9850 5150
+F 0 "#PWR036" H 9850 5000 50  0001 C CNN
+F 1 "+3V3" H 9865 5323 50  0000 C CNN
+F 2 "" H 9850 5150 50  0001 C CNN
+F 3 "" H 9850 5150 50  0001 C CNN
+	1    9850 5150
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	9850 5150 9850 5200
+$Comp
+L power:GND #PWR035
+U 1 1 5C600539
+P 9400 5200
+F 0 "#PWR035" H 9400 4950 50  0001 C CNN
+F 1 "GND" V 9405 5072 50  0000 R CNN
+F 2 "" H 9400 5200 50  0001 C CNN
+F 3 "" H 9400 5200 50  0001 C CNN
+	1    9400 5200
+	0    1    1    0   
+$EndComp
+$Comp
+L Device:C C16
+U 1 1 5C600628
+P 9650 5200
+F 0 "C16" V 9398 5200 50  0000 C CNN
+F 1 "100n" V 9489 5200 50  0000 C CNN
+F 2 "Capacitor_SMD:C_0805_2012Metric" H 9688 5050 50  0001 C CNN
+F 3 "~" H 9650 5200 50  0001 C CNN
+	1    9650 5200
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	9800 5200 9850 5200
+Connection ~ 9850 5200
+Wire Wire Line
+	9850 5200 9850 5250
+Wire Wire Line
+	9500 5200 9400 5200
+$Comp
+L power:+3V3 #PWR033
+U 1 1 5C616C76
+P 9350 5450
+F 0 "#PWR033" H 9350 5300 50  0001 C CNN
+F 1 "+3V3" V 9365 5578 50  0000 L CNN
+F 2 "" H 9350 5450 50  0001 C CNN
+F 3 "" H 9350 5450 50  0001 C CNN
+	1    9350 5450
+	0    -1   -1   0   
+$EndComp
+Wire Wire Line
+	9350 5450 9450 5450
+$Comp
+L power:GND #PWR034
+U 1 1 5C622118
+P 9350 6000
+F 0 "#PWR034" H 9350 5750 50  0001 C CNN
+F 1 "GND" H 9355 5827 50  0000 C CNN
+F 2 "" H 9350 6000 50  0001 C CNN
+F 3 "" H 9350 6000 50  0001 C CNN
+	1    9350 6000
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	9350 6000 9350 5950
+Wire Wire Line
+	9350 5950 9450 5950
+Wire Wire Line
+	9450 5750 9200 5750
+Text Label 9200 5750 0    50   ~ 0
+SDA
+Wire Wire Line
+	9450 5850 9200 5850
+Text Label 9200 5850 0    50   ~ 0
+SCL
+$Comp
+L Device:R R12
+U 1 1 5C65C0DC
+P 5200 5900
+F 0 "R12" H 5270 5946 50  0000 L CNN
+F 1 "10k" H 5270 5855 50  0000 L CNN
+F 2 "Resistor_SMD:R_0805_2012Metric" V 5130 5900 50  0001 C CNN
+F 3 "~" H 5200 5900 50  0001 C CNN
+	1    5200 5900
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:R R13
+U 1 1 5C65C1BB
+P 5500 5900
+F 0 "R13" H 5570 5946 50  0000 L CNN
+F 1 "10k" H 5570 5855 50  0000 L CNN
+F 2 "Resistor_SMD:R_0805_2012Metric" V 5430 5900 50  0001 C CNN
+F 3 "~" H 5500 5900 50  0001 C CNN
+	1    5500 5900
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:+3V3 #PWR031
+U 1 1 5C6736F9
+P 5350 5650
+F 0 "#PWR031" H 5350 5500 50  0001 C CNN
+F 1 "+3V3" H 5365 5823 50  0000 C CNN
+F 2 "" H 5350 5650 50  0001 C CNN
+F 3 "" H 5350 5650 50  0001 C CNN
+	1    5350 5650
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	5500 5750 5500 5700
+Wire Wire Line
+	5500 5700 5350 5700
+Wire Wire Line
+	5200 5700 5200 5750
+Wire Wire Line
+	5350 5700 5350 5650
+Connection ~ 5350 5700
+Wire Wire Line
+	5350 5700 5200 5700
+Wire Wire Line
+	5200 6200 5200 6050
+Connection ~ 5200 6200
+Wire Wire Line
+	5200 6200 5000 6200
+Wire Wire Line
+	5500 6300 5500 6050
+Wire Wire Line
+	5200 6200 5750 6200
+Wire Wire Line
+	5800 6300 5500 6300
+NoConn ~ 9450 5650
+NoConn ~ 8850 1950
+NoConn ~ 950  3950
+$Comp
+L Connector_Generic:Conn_01x04 J2
+U 1 1 5C700548
+P 4650 7200
+F 0 "J2" H 4730 7192 50  0000 L CNN
+F 1 "SWD" H 4730 7101 50  0000 L CNN
+F 2 "Connector_PinHeader_2.54mm:PinHeader_1x04_P2.54mm_Vertical" H 4650 7200 50  0001 C CNN
+F 3 "~" H 4650 7200 50  0001 C CNN
+	1    4650 7200
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	5000 6300 5500 6300
+Connection ~ 5500 6300
+Wire Wire Line
+	5750 5600 5850 5600
+Wire Wire Line
+	5750 5600 5750 6200
+Wire Wire Line
+	5850 5700 5800 5700
+Wire Wire Line
+	5800 5700 5800 6300
 NoConn ~ 5850 5800
-NoConn ~ 5850 5700
+Text Label 5000 6300 0    50   ~ 0
+SDA
 $EndSCHEMATC
