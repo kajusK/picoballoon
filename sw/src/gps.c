@@ -244,7 +244,7 @@ uint8_t NMEA_decode(char *str)
     return 2;
 }
 
-uint8_t GPS_process(char c)
+uint8_t GPS_Process(char c)
 {
     /* first character of message */
     if (c == '$') {

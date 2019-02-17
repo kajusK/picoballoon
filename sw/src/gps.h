@@ -53,7 +53,7 @@ struct s_gps_data {
  * Process character of incomming message and save it to the buffer
  * Return 1 if message was completed and processed
  */
-extern uint8_t GPS_process(char c);
+extern uint8_t GPS_Process(char c);
 
 /*
  * Parse nmea message into internal structures

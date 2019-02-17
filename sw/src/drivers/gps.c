@@ -24,7 +24,7 @@
 #include <libopencm3/cm3/nvic.h>
 #include <libopencm3/stm32/usart.h>
 
-#include "gps.h"
+#include <gps.h>
 #include "drivers/gps.h"
 
 void usart2_isr(void)
@@ -36,7 +36,7 @@ void usart2_isr(void)
     }
 
     data = usart_recv(USART2);
-    GPS_process((char) data);
+    GPS_Process((char) data);
 }
 
 void GPSd_Init(void)
