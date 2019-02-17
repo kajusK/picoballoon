@@ -1,0 +1,15 @@
+*.bak
+*-bak
+*.cod
+*.bin
+*.hex
+*.elf
+*.epp
+*.lst
+*.o
+*.d
+generated*.ld
+compile_commands.json
+tags
+*rescue*
+fw/bin/
