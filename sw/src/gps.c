@@ -25,7 +25,7 @@
 #include <time.h>
 #include <math.h>
 
-#include "systick.h"
+#include "drivers/systick.h"
 #include "gps.h"
 
 #define GPS_MSG_MAX_SIZE 80

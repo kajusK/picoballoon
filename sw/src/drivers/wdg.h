@@ -20,12 +20,12 @@
  * SOFTWARE.
  */
 
-#ifndef __WDG_H
-#define __WDG_H
+#ifndef __DRIVERS_WDG_H
+#define __DRIVERS_WDG_H
 
 #define WDG_PERIOD_MS 1000
 
-extern void wdg_init(void);
-extern void wdg_clear(void);
+extern void Wdgd_Init(void);
+extern void Wdgd_Clear(void);
 
 #endif

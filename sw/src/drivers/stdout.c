@@ -21,39 +21,53 @@
  */
 
 #include <libopencm3/stm32/rcc.h>
-#include <inttypes.h>
+#include <libopencm3/stm32/gpio.h>
+#include <libopencm3/stm32/usart.h>
+
 #include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <errno.h>
 
-#include "drivers/wdg.h"
-#include "drivers/systick.h"
-#include "drivers/gps.h"
-#include "drivers/adc.h"
-#include "drivers/stdout.h"
-#include "gps.h"
-#include "lora.h"
+#include "stdout.h"
 
-void data_sender(void)
+int _write(int fd, char *ptr, int len);
+
+int _write(int fd, char *ptr, int len)
 {
-    lora_send("foo", 3);
+    int i = 0;
 
-    //printf("Sending pos lat %d°%d.%d %c lon %d°%d.%d %c", );
-    //
-
-}
-
-int main(void)
-{
-    rcc_clock_setup_in_hsi_out_48mhz();
-    Wdgd_Init();
-    Systickd_Init();
-    Stdoutd_Init();
-    Adcd_Init();
-    GPSd_Init();
-
-    lora_init();
-
-    while (1) {
-        lora_update();
-        Wdgd_Clear();
+    if (fd != STDOUT_FILENO && fd != STDERR_FILENO) {
+        errno = EIO;
+        return -1;
     }
+
+    while (i < len) {
+        usart_send_blocking(USART3, *ptr);
+        if (*ptr == '\n') {
+            usart_send_blocking(USART3, '\r');
+        }
+        i++;
+        ptr++;
+    }
+
+    return i;
 }
+
+void Stdoutd_Init(void)
+{
+    rcc_periph_clock_enable(RCC_USART3);
+    rcc_periph_clock_enable(RCC_GPIOB);
+
+    gpio_mode_setup(GPIOB, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO10 | GPIO11);
+    gpio_set_af(GPIOB, GPIO_AF1, GPIO11 | GPIO10);
+
+    usart_set_baudrate(USART3, 115200);
+    usart_set_databits(USART3, 8);
+    usart_set_stopbits(USART3, USART_STOPBITS_1);
+    usart_set_mode(USART3, USART_MODE_TX);
+    usart_set_parity(USART3, USART_PARITY_NONE);
+    usart_set_flow_control(USART3, USART_FLOWCONTROL_NONE);
+    usart_enable(USART3);
+}
+

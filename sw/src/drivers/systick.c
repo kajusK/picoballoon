@@ -19,43 +19,33 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#include <libopencm3/stm32/rcc.h>
-#include <libopencm3/stm32/gpio.h>
+
+#include <libopencm3/cm3/systick.h>
 #include <libopencm3/cm3/nvic.h>
-#include <libopencm3/stm32/usart.h>
+#include <libopencm3/stm32/rcc.h>
 
-#include "gps.h"
-#include "gps_driver.h"
+#include "systick.h"
 
-void usart2_isr(void)
+static volatile uint32_t elapsed_ms;
+
+void sys_tick_handler(void)
 {
-    uint8_t data;
-
-    if ((USART_ISR(USART2) & USART_FLAG_RXNE) == 0) {
-        return;
-    }
-
-    data = usart_recv(USART2);
-    GPS_process((char) data);
+    elapsed_ms++;
 }
 
-void GPSd_init(void)
+bool Systickd_Init(void)
 {
-    rcc_periph_clock_enable(RCC_USART2);
-    rcc_periph_clock_enable(RCC_GPIOA);
+    systick_clear();
 
-    gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO3 | GPIO2);
-    gpio_set_af(GPIOA, GPIO_AF1, GPIO3 | GPIO2);
+    if (!systick_set_frequency(1000, rcc_ahb_frequency))
+        return true;
 
-    usart_set_baudrate(USART2, 9600);
-    usart_set_databits(USART2, 8);
-    usart_set_stopbits(USART2, USART_STOPBITS_1);
-    usart_set_mode(USART2, USART_MODE_RX);
-    usart_set_parity(USART2, USART_PARITY_NONE);
-    usart_set_flow_control(USART2, USART_FLOWCONTROL_NONE);
+    systick_counter_enable();
+    systick_interrupt_enable();
+    return false;
+}
 
-    nvic_enable_irq(NVIC_USART2_IRQ);
-    usart_enable_rx_interrupt(USART2);
-
-    usart_enable(USART2);
+uint32_t millis(void)
+{
+    return elapsed_ms;
 }

@@ -20,17 +20,13 @@
  * SOFTWARE.
  */
 
-#include <libopencm3/stm32/rcc.h>
-#include <libopencm3/stm32/iwdg.h>
-#include "wdg.h"
+#ifndef __SYSTICK_H
+#define __SYSTICK_H
 
-void wdg_init(void)
-{
-    rcc_periph_clock_enable(RCC_WWDG);
-    iwdg_set_period_ms(WDG_PERIOD_MS);
-}
+#include <inttypes.h>
+#include <stdbool.h>
 
-void wdg_clear(void)
-{
-    iwdg_reset();
-}
+extern bool Systickd_Init(void);
+extern uint32_t millis(void);
+
+#endif

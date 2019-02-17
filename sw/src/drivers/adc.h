@@ -20,32 +20,46 @@
  * SOFTWARE.
  */
 
-#include <libopencm3/cm3/systick.h>
-#include <libopencm3/cm3/nvic.h>
-#include <libopencm3/stm32/rcc.h>
+#ifndef __DRIVERS_ADC_H_
+#define __DRIVERS_ADC_H_
 
-#include "systick.h"
+#include <inttypes.h>
 
-static volatile uint32_t elapsed_ms;
+/**
+ * Set pin as analog input
+ */
+extern void Adcd_SetAnalog(uint32_t port, uint16_t gpios);
 
-void sys_tick_handler(void)
-{
-    elapsed_ms++;
-}
+/**
+ * Read the raw 12 bit data from adc conversion
+ */
+extern uint16_t Adcd_ReadRaw(uint8_t channel);
 
-bool systick_init(void)
-{
-    systick_clear();
+/**
+ * Read voltage on the channel in mV
+ */
+extern uint16_t Adcd_ReadMv(uint8_t channel);
 
-    if (!systick_set_frequency(1000, rcc_ahb_frequency))
-        return true;
+/**
+ * Read power supply voltage
+ */
+extern uint16_t Adcd_ReadVccMv(void);
 
-    systick_counter_enable();
-    systick_interrupt_enable();
-    return false;
-}
+/**
+ * Read core temeperature in degrees C
+ */
+extern int16_t Adcd_ReadTempDegC(void);
 
-uint32_t millis(void)
-{
-    return elapsed_ms;
-}
+/**
+ * Update reference voltage from internal reference measurements
+ *
+ * Should be called from time to time in vdda is not very stable
+ */
+extern void Adcd_UpdateVdda(void);
+
+/**
+ * Initialize the adc driver
+ */
+extern void Adcd_Init(void);
+
+#endif

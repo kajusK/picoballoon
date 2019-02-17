@@ -19,55 +19,43 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/gpio.h>
+#include <libopencm3/cm3/nvic.h>
 #include <libopencm3/stm32/usart.h>
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <errno.h>
+#include "gps.h"
+#include "drivers/gps.h"
 
-#include "stdout.h"
-
-int _write(int fd, char *ptr, int len);
-
-int _write(int fd, char *ptr, int len)
+void usart2_isr(void)
 {
-    int i = 0;
+    uint8_t data;
 
-    if (fd != STDOUT_FILENO && fd != STDERR_FILENO) {
-        errno = EIO;
-        return -1;
+    if ((USART_ISR(USART2) & USART_FLAG_RXNE) == 0) {
+        return;
     }
 
-    while (i < len) {
-        usart_send_blocking(USART3, *ptr);
-        if (*ptr == '\n') {
-            usart_send_blocking(USART3, '\r');
-        }
-        i++;
-        ptr++;
-    }
-
-    return i;
+    data = usart_recv(USART2);
+    GPS_process((char) data);
 }
 
-void stdout_init(void)
+void GPSd_Init(void)
 {
-    rcc_periph_clock_enable(RCC_USART3);
-    rcc_periph_clock_enable(RCC_GPIOB);
+    rcc_periph_clock_enable(RCC_USART2);
+    rcc_periph_clock_enable(RCC_GPIOA);
 
-    gpio_mode_setup(GPIOB, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO10 | GPIO11);
-    gpio_set_af(GPIOB, GPIO_AF1, GPIO11 | GPIO10);
+    gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO3 | GPIO2);
+    gpio_set_af(GPIOA, GPIO_AF1, GPIO3 | GPIO2);
 
-    usart_set_baudrate(USART3, 115200);
-    usart_set_databits(USART3, 8);
-    usart_set_stopbits(USART3, USART_STOPBITS_1);
-    usart_set_mode(USART3, USART_MODE_TX);
-    usart_set_parity(USART3, USART_PARITY_NONE);
-    usart_set_flow_control(USART3, USART_FLOWCONTROL_NONE);
-    usart_enable(USART3);
+    usart_set_baudrate(USART2, 9600);
+    usart_set_databits(USART2, 8);
+    usart_set_stopbits(USART2, USART_STOPBITS_1);
+    usart_set_mode(USART2, USART_MODE_RX);
+    usart_set_parity(USART2, USART_PARITY_NONE);
+    usart_set_flow_control(USART2, USART_FLOWCONTROL_NONE);
+
+    nvic_enable_irq(NVIC_USART2_IRQ);
+    usart_enable_rx_interrupt(USART2);
+
+    usart_enable(USART2);
 }
-

@@ -1,3 +1,4 @@
+
 /*
  * Copyright (c) 2019 Jakub Kaderka
  *
@@ -20,9 +21,9 @@
  * SOFTWARE.
  */
 
-#ifndef __GPS_DRIVER_H
-#define __GPS_DRIVER__H
+#ifndef __STDOUT_H
+#define __STDOUT_H
 
-void GPSd_init(void);
+extern void Stdoutd_Init(void);
 
 #endif
