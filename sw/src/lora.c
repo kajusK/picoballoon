@@ -117,7 +117,7 @@ void onEvent (ev_t ev) {
     }
 }
 
-bool lora_send(uint8_t *data, uint16_t len)
+bool Lora_Send(uint8_t *data, uint16_t len)
 {
     /* Check if there is not a current TX/RX job running */
     if (LMIC.opmode & OP_TXRXPEND) {
@@ -132,12 +132,12 @@ bool lora_send(uint8_t *data, uint16_t len)
     /* Next TX is scheduled after TX_COMPLETE event. */
 }
 
-void lora_update(void)
+void Lora_Update(void)
 {
     os_runloop_once();
 }
 
-void lora_init(void)
+void Lora_Init(void)
 {
     os_init();
     LMIC_reset();

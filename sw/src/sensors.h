@@ -20,8 +20,8 @@
  * SOFTWARE.
  */
 
-#ifndef __LORA_H
-#define __LORA_H
+#ifndef __SENSORS_H
+#define __SENSORS_H
 
 #include <inttypes.h>
 #include <stdbool.h>

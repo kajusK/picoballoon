@@ -26,8 +26,8 @@
 #include <inttypes.h>
 #include <stdbool.h>
 
-extern bool lora_send(uint8_t *data, uint16_t len);
-extern void lora_update(void);
-extern void lora_init(void);
+extern bool Lora_Send(uint8_t *data, uint16_t len);
+extern void Lora_Update(void);
+extern void Lora_Init(void);
 
 #endif

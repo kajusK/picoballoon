@@ -36,10 +36,9 @@
 
 void data_sender(void)
 {
-    lora_send("foo", 3);
+    Lora_Send("foo", 3);
 
     //printf("Sending pos lat %d°%d.%d %c lon %d°%d.%d %c", );
-    //
 }
 
 int main(void)
@@ -52,11 +51,15 @@ int main(void)
     GPSd_Init();
     I2Cd_Init();
     Sensors_Init();
+    Lora_Init();
 
-    lora_init();
+    /* wait for gps fix */
+    while (GPS_get_data() == NULL) {
+        ;
+    }
 
     while (1) {
-        lora_update();
+        Lora_Update();
         Wdgd_Clear();
     }
 }
