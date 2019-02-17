@@ -116,6 +116,16 @@ void GPSd_SetPowerSave(void)
     GPSdi_UBXSend(UBX_CMD_PMS, (uint8_t *) &pms, sizeof(pms));
 }
 
+void GPSd_PowerOn(void)
+{
+
+}
+
+void GPSd_PowerOff(void)
+{
+
+}
+
 void GPSd_Init(void)
 {
     rcc_periph_clock_enable(RCC_USART2);

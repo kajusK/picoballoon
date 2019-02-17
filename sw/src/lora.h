@@ -27,7 +27,21 @@
 #include <stdbool.h>
 
 extern bool Lora_Send(uint8_t *data, uint16_t len);
+
+/**
+ * Update lora state, should be called periodically
+ */
 extern void Lora_Update(void);
+
+/**
+ * Return true is all lora communication was completed
+ */
+extern bool Lora_IsAllSent(void);
+
+extern void Lora_PowerOff(void);
+
+extern void Lora_PowerOn(void);
+
 extern void Lora_Init(void);
 
 #endif

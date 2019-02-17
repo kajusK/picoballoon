@@ -36,6 +36,12 @@ extern int32_t Sensors_TempDegC(void);
  */
 extern void Sensors_PressurecMbar(uint32_t *pressure, int32_t *temperature);
 
+/** Voltage on solar array */
+extern uint16_t Sensors_GetSolarMv(void);
+
+/** Voltage on power capacitor */
+extern uint16_t Sensors_GetCapMv(void);
+
 /**
  * Initialize sensors
  */

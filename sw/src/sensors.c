@@ -144,6 +144,16 @@ void Sensors_PressurecMbar(uint32_t *pressure, int32_t *temperature)
     *temperature = temp;
 }
 
+uint16_t Sensors_GetSolarMv(void)
+{
+    return Adcd_ReadMv(AD_CHANNEL_SOLAR);
+}
+
+uint16_t Sensors_GetCapMv(void)
+{
+    return Adcd_ReadMv(AD_CHANNEL_SUPERCAP);
+}
+
 void Sensors_Init(void)
 {
     Adcd_SetAnalog(GPIOA, 1 << AD_CHANNEL_SUPERCAP);

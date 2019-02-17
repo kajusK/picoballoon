@@ -20,18 +20,26 @@
  * SOFTWARE.
  */
 
-#ifndef __DRIVERS_GPS_H
-#define __DRIVERS_GPS_H
+#include <libopencm3/stm32/rcc.h>
+#include <libopencm3/stm32/gpio.h>
 
-/**
- * Switch to more power saving mode
- */
-extern void GPSd_SetPowerSave(void);
+#include "drivers/power.h"
 
-extern void GPSd_PowerOn(void);
+#define PORT_LATCH GPIOB
+#define PIN_LATCH GPIO8
+#define RCC_LATCH RCC_GPIOB
 
-extern void GPSd_PowerOff(void);
+void Powerd_ShutDown(void)
+{
+    rcc_periph_clock_enable(RCC_LATCH);
+    gpio_mode_setup(PORT_LATCH, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, PIN_LATCH);
+    gpio_clear(PORT_LATCH, PIN_LATCH);
+    while (1)
+        ;
+}
 
-extern void GPSd_Init(void);
+void Powerd_Sleep(uint32_t time_ms)
+{
 
-#endif
+}
+

@@ -20,18 +20,17 @@
  * SOFTWARE.
  */
 
-#ifndef __DRIVERS_GPS_H
-#define __DRIVERS_GPS_H
+#ifndef __DRIVERS_POWER_H
+#define __DRIVERS_POWER_H
 
 /**
- * Switch to more power saving mode
+ * Shut down power to all modules including the mcu
  */
-extern void GPSd_SetPowerSave(void);
+extern void Powerd_ShutDown(void);
 
-extern void GPSd_PowerOn(void);
-
-extern void GPSd_PowerOff(void);
-
-extern void GPSd_Init(void);
+/**
+ * Go to sleep for given period of time
+ */
+extern void Powerd_Sleep(uint32_t time_ms);
 
 #endif
