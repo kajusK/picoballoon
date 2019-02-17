@@ -68,7 +68,7 @@ typedef struct {
     int8_t temp_c;      /* Temperature from another sensor in deg C */
     int8_t core_c;      /* Temperature of the system core */
     uint16_t altitude_m; /* altitude from gps */
-} lora_msg_t;
+}__attribute__((packed)) lora_msg_t;
 
 /** amount of messages already sent */
 static uint16_t probei_msg_sent = 0;
