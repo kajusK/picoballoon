@@ -42,13 +42,13 @@
 #define UBX_CMD_PMS 0x86
 
 typedef enum {
-    CFG_POWER_FULL,
-    CFG_POWER_BALANCED,
-    CFG_POWER_INTERVAL,
-    CFG_POWER_AGGRESIVE_1HZ,
-    CFG_POWER_AGGRESIVE_2HZ,
-    CFG_POWER_AGGRESIVE_4HZ,
-} ubx_cfg_power_setup_t;
+    CFG_PMS_FULL,
+    CFG_PMS_BALANCED,
+    CFG_PMS_INTERVAL,
+    CFG_PMS_AGGRESIVE_1HZ,
+    CFG_PMS_AGGRESIVE_2HZ,
+    CFG_PMS_AGGRESIVE_4HZ,
+} ubx_cfg_pms_power_t;
 
 typedef struct {
     uint8_t version;
@@ -56,7 +56,24 @@ typedef struct {
     uint16_t period;
     uint16_t onTime;
     uint8_t reserved;
-} ubx_cfg_pms_t;
+} __attribute__((packed)) ubx_cfg_pms_t;
+
+/** Power state */
+#define UBX_CMD_PWR 0x57
+
+typedef enum {
+    CFG_PWR_GNSS_RUN = 0x52554E20,
+    CFG_PWR_GNSS_STOP = 0x53544F50,
+    CFG_PWR_SW_BACKUP = 0x42434B50, /* hw reboot required to start */
+} ubx_cfg_pwr_state_t;
+
+typedef struct {
+    uint8_t version;
+    uint8_t reserved1;
+    uint8_t reserved2;
+    uint8_t reserved3;
+    uint32_t state;
+} __attribute__((packed)) ubx_cfg_pwr_t;
 
 void usart2_isr(void)
 {
@@ -108,7 +125,7 @@ void GPSd_SetPowerSave(void)
     ubx_cfg_pms_t pms;
 
     pms.version = 0x00;
-    pms.power = CFG_POWER_AGGRESIVE_1HZ;
+    pms.power = CFG_PMS_AGGRESIVE_1HZ;
     pms.period = 0;
     pms.onTime = 0;
     pms.reserved = 0;
@@ -116,14 +133,21 @@ void GPSd_SetPowerSave(void)
     GPSdi_UBXSend(UBX_CMD_PMS, (uint8_t *) &pms, sizeof(pms));
 }
 
-void GPSd_PowerOn(void)
+void GPSd_SetPower(bool on)
 {
+    ubx_cfg_pwr_t pwr;
 
-}
+    pwr.version = 0x01;
+    pwr.reserved1 = 0;
+    pwr.reserved2 = 0;
+    pwr.reserved3 = 0;
+    if (on) {
+        pwr.state = CFG_PWR_GNSS_RUN;
+    } else {
+        pwr.state = CFG_PWR_GNSS_STOP;
+    }
 
-void GPSd_PowerOff(void)
-{
-
+    GPSdi_UBXSend(UBX_CMD_PWR, (uint8_t *) &pwr, sizeof(pwr));
 }
 
 void GPSd_Init(void)

@@ -28,9 +28,7 @@
  */
 extern void GPSd_SetPowerSave(void);
 
-extern void GPSd_PowerOn(void);
-
-extern void GPSd_PowerOff(void);
+extern void GPSd_SetPower(bool on);
 
 extern void GPSd_Init(void);
 

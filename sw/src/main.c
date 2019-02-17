@@ -95,7 +95,7 @@ static void Probe_Sleep(void)
     while (!Lora_IsAllSent()) {
         Lora_Update();
     }
-    GPSd_PowerOff();
+    GPSd_SetPower(false);
     Lora_PowerOff();
     Wdgd_Clear();
 
@@ -103,7 +103,7 @@ static void Probe_Sleep(void)
 
     Wdgd_Clear();
     Lora_PowerOn();
-    GPSd_PowerOn();
+    GPSd_SetPower(true);
 }
 
 /**
@@ -214,8 +214,11 @@ int main(void)
 
     Systickd_Init();
     Adcd_Init();
+
     GPSd_Init();
     GPSd_SetPowerSave();
+    GPSd_SetPower(true);
+
     I2Cd_Init();
     Sensors_Init();
     Lora_Init();
