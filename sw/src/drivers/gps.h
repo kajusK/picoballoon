@@ -23,6 +23,11 @@
 #ifndef __DRIVERS_GPS_H
 #define __DRIVERS_GPS_H
 
-void GPSd_Init(void);
+/**
+ * Switch to more power saving mode
+ */
+extern void GPSd_SetPowerSave(void);
+
+extern void GPSd_Init(void);
 
 #endif

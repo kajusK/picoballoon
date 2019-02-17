@@ -19,6 +19,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
+/**
+ * Driver layer for ublox gps module, without nmea decoder
+ */
+
+#include <string.h>
+
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/cm3/nvic.h>
@@ -26,6 +33,30 @@
 
 #include <gps.h>
 #include "drivers/gps.h"
+
+#define SYNC_CHAR1 0xb5
+#define SYNC_CHAR2 0x62
+#define UBX_CLASS_CFG 0x06
+
+/** Power mode setup */
+#define UBX_CMD_PMS 0x86
+
+typedef enum {
+    CFG_POWER_FULL,
+    CFG_POWER_BALANCED,
+    CFG_POWER_INTERVAL,
+    CFG_POWER_AGGRESIVE_1HZ,
+    CFG_POWER_AGGRESIVE_2HZ,
+    CFG_POWER_AGGRESIVE_4HZ,
+} ubx_cfg_power_setup_t;
+
+typedef struct {
+    uint8_t version;
+    uint8_t power;
+    uint16_t period;
+    uint16_t onTime;
+    uint8_t reserved;
+} ubx_cfg_pms_t;
 
 void usart2_isr(void)
 {
@@ -37,6 +68,52 @@ void usart2_isr(void)
 
     data = usart_recv(USART2);
     GPS_Process((char) data);
+}
+
+static void GPSd_Write(const uint8_t *data, uint16_t len)
+{
+    while (len-- != 0) {
+        usart_send_blocking(USART2, *data++);
+    }
+}
+
+static void GPSdi_UBXSend(uint8_t msg_id, uint8_t *payload, uint16_t len)
+{
+    uint8_t ck_a = 0;
+    uint8_t ck_b = 0;
+
+    uint8_t msg[50];
+    msg[0] = SYNC_CHAR1;
+    msg[1] = SYNC_CHAR2;
+    msg[2] = UBX_CLASS_CFG;
+    msg[3] = msg_id;
+    msg[4] = len & 0xff;
+    msg[5] = (len >> 8) & 0xff;
+
+    memcpy(&msg[6], payload, len);
+
+    for (int i = 0; i < len + 4; i++) {
+        ck_a = ck_a + msg[i+2];
+        ck_b = ck_b + ck_a;
+    }
+
+    msg[len+6] = ck_a;
+    msg[len+7] = ck_b;
+
+    GPSd_Write(msg, len + 8);
+}
+
+void GPSd_SetPowerSave(void)
+{
+    ubx_cfg_pms_t pms;
+
+    pms.version = 0x00;
+    pms.power = CFG_POWER_AGGRESIVE_1HZ;
+    pms.period = 0;
+    pms.onTime = 0;
+    pms.reserved = 0;
+
+    GPSdi_UBXSend(UBX_CMD_PMS, (uint8_t *) &pms, sizeof(pms));
 }
 
 void GPSd_Init(void)

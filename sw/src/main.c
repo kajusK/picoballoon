@@ -34,8 +34,16 @@
 #include "sensors.h"
 #include "lora.h"
 
+typedef struct {
+    uint8_t id;
+    uint16_t pressure_mbar;
+    int16_t temp_cC;
+
+} lora_msg;
+
 void data_sender(void)
 {
+
     Lora_Send("foo", 3);
 
     //printf("Sending pos lat %d°%d.%d %c lon %d°%d.%d %c", );
@@ -43,12 +51,12 @@ void data_sender(void)
 
 int main(void)
 {
-    rcc_clock_setup_in_hsi_out_48mhz();
     Wdgd_Init();
     Systickd_Init();
     Stdoutd_Init();
     Adcd_Init();
     GPSd_Init();
+    GPSd_SetPowerSave();
     I2Cd_Init();
     Sensors_Init();
     Lora_Init();
@@ -61,5 +69,9 @@ int main(void)
     while (1) {
         Lora_Update();
         Wdgd_Clear();
+
+
+        //uspat a probrat se s rtc alarmem
+        //keep last fix in non volatile memeory, decide if need to send data
     }
 }
