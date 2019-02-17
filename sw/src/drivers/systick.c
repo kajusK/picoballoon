@@ -49,3 +49,12 @@ uint32_t millis(void)
 {
     return elapsed_ms;
 }
+
+void delay_ms(uint32_t ms)
+{
+    uint32_t start = millis();
+
+    while ((millis() - start) < ms) {
+        ;
+    }
+}

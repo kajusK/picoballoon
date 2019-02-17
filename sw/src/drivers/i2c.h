@@ -20,14 +20,24 @@
  * SOFTWARE.
  */
 
-#ifndef __SYSTICK_H
-#define __SYSTICK_H
+#ifndef __DRIVERS_I2C_H
+#define __DRIVERS_I2C_H
 
-#include <inttypes.h>
-#include <stdbool.h>
+/**
+ * Send/receive data over i2c
+ *
+ * @param [in] address      Device address (7 bit)
+ * @param [in] txbuf        Data to send or NULL
+ * @param [in] txlen        Length of txbuf
+ * @param [out] rxbuf       Buffer for received data or NULL
+ * @param [in] rxlen        Amount of bytes to receive
+ */
+extern void I2Cd_Transceive(uint8_t address, uint8_t *txbuf, uint8_t txlen,
+        uint8_t *rxbuf, uint8_t rxlen);
 
-extern bool Systickd_Init(void);
-extern uint32_t millis(void);
-extern void delay_ms(uint32_t ms);
+/**
+ * Initialize the i2c peripheral
+ */
+extern void I2Cd_Init(void);
 
 #endif

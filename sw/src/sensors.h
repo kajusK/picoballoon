@@ -20,14 +20,25 @@
  * SOFTWARE.
  */
 
-#ifndef __SYSTICK_H
-#define __SYSTICK_H
+#ifndef __LORA_H
+#define __LORA_H
 
 #include <inttypes.h>
 #include <stdbool.h>
 
-extern bool Systickd_Init(void);
-extern uint32_t millis(void);
-extern void delay_ms(uint32_t ms);
+/**
+ * Get ambient temperature in degrees C
+ */
+extern int32_t Sensors_TempDegC(void);
+
+/**
+ * Get ambient air pressure in centi mbar (110002 = 1100.02 mBar)
+ */
+extern void Sensors_PressurecMbar(uint32_t *pressure, int32_t *temperature);
+
+/**
+ * Initialize sensors
+ */
+extern void Sensors_Init(void);
 
 #endif

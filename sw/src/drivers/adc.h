@@ -24,6 +24,7 @@
 #define __DRIVERS_ADC_H_
 
 #include <inttypes.h>
+#include <libopencm3/stm32/gpio.h>
 
 /**
  * Set pin as analog input

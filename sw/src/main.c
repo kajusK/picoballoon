@@ -29,7 +29,9 @@
 #include "drivers/gps.h"
 #include "drivers/adc.h"
 #include "drivers/stdout.h"
+#include "drivers/i2c.h"
 #include "gps.h"
+#include "sensors.h"
 #include "lora.h"
 
 void data_sender(void)
@@ -38,7 +40,6 @@ void data_sender(void)
 
     //printf("Sending pos lat %d°%d.%d %c lon %d°%d.%d %c", );
     //
-
 }
 
 int main(void)
@@ -49,6 +50,8 @@ int main(void)
     Stdoutd_Init();
     Adcd_Init();
     GPSd_Init();
+    I2Cd_Init();
+    Sensors_Init();
 
     lora_init();
 

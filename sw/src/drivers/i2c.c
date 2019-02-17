@@ -20,14 +20,35 @@
  * SOFTWARE.
  */
 
-#ifndef __SYSTICK_H
-#define __SYSTICK_H
+#include <libopencm3/stm32/rcc.h>
+#include <libopencm3/stm32/i2c.h>
+#include <libopencm3/stm32/gpio.h>
 
-#include <inttypes.h>
-#include <stdbool.h>
+#include "drivers/i2c.h"
 
-extern bool Systickd_Init(void);
-extern uint32_t millis(void);
-extern void delay_ms(uint32_t ms);
+void I2Cd_Transceive(uint8_t address, uint8_t *txbuf, uint8_t txlen,
+        uint8_t *rxbuf, uint8_t rxlen)
+{
+    i2c_transfer7(I2C2, address, txbuf, txlen, rxbuf, rxlen);
+}
 
-#endif
+void I2Cd_Init(void)
+{
+    rcc_periph_clock_enable(RCC_I2C2);
+    rcc_periph_clock_enable(RCC_GPIOB);
+    rcc_set_i2c_clock_hsi(I2C2);
+
+    i2c_reset(I2C2);
+    gpio_mode_setup(GPIOB, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO14 | GPIO13);
+    gpio_set_af(GPIOB, GPIO_AF4, GPIO13 | GPIO14);
+    i2c_peripheral_disable(I2C2);
+
+    i2c_enable_analog_filter(I2C2);
+    i2c_set_digital_filter(I2C2, 0);
+
+    i2c_set_speed(I2C2, i2c_speed_fm_400k, 8);
+    i2c_enable_stretching(I2C2);
+
+    i2c_set_7bit_addr_mode(I2C2);
+    i2c_peripheral_enable(I2C2);
+}
