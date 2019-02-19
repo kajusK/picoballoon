@@ -28,6 +28,7 @@ void Wdgd_Init(void)
 {
     rcc_periph_clock_enable(RCC_WWDG);
     iwdg_set_period_ms(WDG_PERIOD_MS);
+    iwdg_start();
 }
 
 void Wdgd_Clear(void)
