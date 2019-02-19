@@ -32,7 +32,7 @@
  * @param [out] rxbuf       Buffer for received data or NULL
  * @param [in] rxlen        Amount of bytes to receive
  */
-extern void I2Cd_Transceive(uint8_t address, uint8_t *txbuf, uint8_t txlen,
+extern bool I2Cd_Transceive(uint8_t address, uint8_t *txbuf, uint8_t txlen,
         uint8_t *rxbuf, uint8_t rxlen);
 
 /**

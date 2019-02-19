@@ -26,10 +26,60 @@
 
 #include "drivers/i2c.h"
 
-void I2Cd_Transceive(uint8_t address, uint8_t *txbuf, uint8_t txlen,
+bool I2Cd_Transceive(uint8_t address, uint8_t *txbuf, uint8_t txlen,
         uint8_t *rxbuf, uint8_t rxlen)
 {
-    i2c_transfer7(I2C2, address, txbuf, txlen, rxbuf, rxlen);
+    uint32_t i2c = I2C2;
+
+    /** modified code from libopencm3 library - infinite loop on nack, wtf?? */
+    /*  waiting for busy is unnecessary. read the RM */
+    if (txlen) {
+        i2c_set_7bit_address(i2c, address);
+        i2c_set_write_transfer_dir(i2c);
+        i2c_set_bytes_to_transfer(i2c, txlen);
+        if (rxlen) {
+            i2c_disable_autoend(i2c);
+        } else {
+            i2c_enable_autoend(i2c);
+        }
+        i2c_send_start(i2c);
+
+        while (txlen--) {
+            bool wait = true;
+            while (wait) {
+                if (i2c_transmit_int_status(i2c)) {
+                    wait = false;
+                }
+                if (i2c_nack(i2c)) {
+                    return false;
+                }
+            }
+            i2c_send_data(i2c, *txbuf++);
+        }
+        /* not entirely sure this is really necessary.
+         * RM implies it will stall until it can write out the later bits
+         */
+        if (rxlen) {
+            while (!i2c_transfer_complete(i2c));
+        }
+    }
+
+    if (rxlen) {
+        /* Setting transfer properties */
+        i2c_set_7bit_address(i2c, address);
+        i2c_set_read_transfer_dir(i2c);
+        i2c_set_bytes_to_transfer(i2c, rxlen);
+        /* start transfer */
+        i2c_send_start(i2c);
+        /* important to do it afterwards to do a proper repeated start! */
+        i2c_enable_autoend(i2c);
+
+        for (size_t i = 0; i < rxlen; i++) {
+            while (i2c_received_data(i2c) == 0);
+            rxbuf[i] = i2c_get_data(i2c);
+        }
+    }
+    return true;
 }
 
 void I2Cd_Init(void)
@@ -40,7 +90,7 @@ void I2Cd_Init(void)
 
     i2c_reset(I2C2);
     gpio_mode_setup(GPIOB, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO14 | GPIO13);
-    gpio_set_af(GPIOB, GPIO_AF4, GPIO13 | GPIO14);
+    gpio_set_af(GPIOB, GPIO_AF5, GPIO13 | GPIO14);
     i2c_peripheral_disable(I2C2);
 
     i2c_enable_analog_filter(I2C2);
