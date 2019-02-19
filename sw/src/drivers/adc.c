@@ -91,6 +91,8 @@ void Adcd_Init(void)
 {
     int i;
 
+    rcc_periph_clock_enable(RCC_ADC);
+
     adc_power_off(ADC1);
     adc_set_clk_source(ADC1, ADC_CLKSOURCE_ADC);
     adc_calibrate(ADC1);
