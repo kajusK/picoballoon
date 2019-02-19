@@ -60,7 +60,7 @@ void Stdoutd_Init(void)
     rcc_periph_clock_enable(RCC_GPIOB);
 
     gpio_mode_setup(GPIOB, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO10 | GPIO11);
-    gpio_set_af(GPIOB, GPIO_AF1, GPIO11 | GPIO10);
+    gpio_set_af(GPIOB, GPIO_AF4, GPIO11 | GPIO10);
 
     usart_set_baudrate(USART3, 115200);
     usart_set_databits(USART3, 8);
