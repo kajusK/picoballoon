@@ -20,6 +20,8 @@
  * SOFTWARE.
  */
 
+#include <stdio.h>
+
 #include <libopencm3/cm3/nvic.h>
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/gpio.h>
@@ -62,6 +64,8 @@ void hal_init(void)
     rcc_periph_clock_enable(RCC_NSS);
     rcc_periph_clock_enable(RCC_RST);
 
+    gpio_set(PORT_NSS, PIN_NSS);
+    gpio_clear(PORT_RST, PIN_RST);
     gpio_mode_setup(PORT_NSS, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, PIN_NSS);
     gpio_mode_setup(PORT_RST, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, PIN_RST);
 
@@ -93,8 +97,10 @@ void hal_init(void)
     gpio_set_af(GPIOB, GPIO_AF0, GPIO3 | GPIO4 | GPIO5);
 
     spi_reset(SPI1);
-    spi_init_master(SPI1, SPI_CR1_BAUDRATE_FPCLK_DIV_4, SPI_CR1_CPOL_CLK_TO_0_WHEN_IDLE,
-                    SPI_CR1_CPHA_CLK_TRANSITION_1, SPI_CR1_LSBFIRST);
+    spi_init_master(SPI1, SPI_CR1_BAUDRATE_FPCLK_DIV_64, SPI_CR1_CPOL_CLK_TO_0_WHEN_IDLE,
+                    SPI_CR1_CPHA_CLK_TRANSITION_1, SPI_CR1_MSBFIRST);
+    spi_set_data_size(SPI1, SPI_CR2_DS_8BIT);
+    spi_fifo_reception_threshold_8bit(SPI1);
     spi_set_full_duplex_mode(SPI1);
 
     /* Ignore the stupid NSS pin. This is required for spi to work */
@@ -132,8 +138,10 @@ void hal_pin_rxtx(u1_t val)
 void hal_pin_rst(u1_t val)
 {
     if (val == 1) {
+        gpio_mode_setup(PORT_RST, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, PIN_RST);
         gpio_set(PORT_RST, PIN_RST);
     } else if (val == 0) {
+        gpio_mode_setup(PORT_RST, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, PIN_RST);
         gpio_clear(PORT_RST, PIN_RST);
     } else {
         gpio_mode_setup(PORT_RST, GPIO_MODE_INPUT, GPIO_PUPD_NONE, PIN_RST);
@@ -147,7 +155,14 @@ void hal_pin_rst(u1_t val)
  */
 u1_t hal_spi(u1_t outval)
 {
-    return spi_xfer(SPI1, outval);
+    /*
+     * Can't use the spi_xfer, bug in stm32f0 - must write to uint8_t address,
+     * else the spi peripheral will send 2 bytes instead of one
+     */
+    SPI_DR8(SPI1) = outval;
+    while (!(SPI_SR(SPI1) & SPI_SR_RXNE))
+        ;
+    return SPI_DR8(SPI1);
 }
 
 /*
@@ -211,8 +226,7 @@ u1_t hal_checkTimer(u4_t targettime)
  */
 void hal_failed(const char *file, u2_t line)
 {
-    (void) file;
-    (void) line;
+    printf("LMIC hal failed, file: %s, line: %d\n", file, line);
     while (1) {
         ;
     }
