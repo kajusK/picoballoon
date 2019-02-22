@@ -41,11 +41,13 @@
 #define PIN_RST GPIO7
 #define RCC_RST RCC_GPIOB
 
-#define EXT_DIO0 8
-#define EXT_DIO1 15
+#define EXT_DIO0 EXTI8
+#define EXT_DIO1 EXTI15
+
+uint16_t tick_upper;
 
 /* EXT8 (PA8) is DIO0, EXT15 (PA15) DIO1 */
-void exti4_15_isr (void)
+void exti4_15_isr(void)
 {
     if (exti_get_flag_status(EXT_DIO0)) {
         exti_reset_request(EXT_DIO0);
@@ -54,6 +56,12 @@ void exti4_15_isr (void)
         exti_reset_request(EXT_DIO1);
         radio_irq_handler(1);
     }
+}
+
+void tim7_isr(void)
+{
+    timer_clear_flag(TIM7, TIM_SR_UIF);
+    tick_upper++;
 }
 
 /*
@@ -80,15 +88,17 @@ void hal_init(void)
     exti_enable_request(EXT_DIO1);
     hal_enableIRQs();
 
-    /* timer 2 as os tick - 32 bit, period 16 us */
-    rcc_periph_clock_enable(RCC_TIM2);
-    rcc_periph_reset_pulse(RST_TIM2);
+    /* timer 6 as os tick - 16 bit, period 16 us */
+    rcc_periph_clock_enable(RCC_TIM7);
+    rcc_periph_reset_pulse(RST_TIM7);
     /* frequency to 62,5 kHz - 16 us tick */
-    timer_set_prescaler(TIM2, ((rcc_apb1_frequency) / 62500));
-    timer_disable_preload(TIM2);
-    timer_continuous_mode(TIM2);
-    timer_set_period(TIM2, (uint32_t) -1);
-    timer_enable_counter(TIM2);
+    timer_set_prescaler(TIM7, (rcc_apb1_frequency / 62500));
+    timer_disable_preload(TIM7);
+    timer_continuous_mode(TIM7);
+    timer_set_period(TIM7, 0xffff);
+    timer_enable_counter(TIM7);
+    nvic_enable_irq(NVIC_TIM7_IRQ);
+    timer_enable_irq(TIM7, TIM_DIER_UIE);
 
     /* Configure SPI GPIOs: SCK=PA5, MISO=PA6 and MOSI=PA7 */
     rcc_periph_clock_enable(RCC_SPI1);
@@ -196,7 +206,17 @@ void hal_sleep(void)
  */
 u4_t hal_ticks(void)
 {
-    return  timer_get_counter(TIM2);
+    uint32_t first;
+    uint32_t second;
+
+    first = (tick_upper << 16) | timer_get_counter(TIM7);
+    second = (tick_upper << 16) | timer_get_counter(TIM7);
+
+    /* catching possible change during reading two values */
+    if (second < first) {
+        return first;
+    }
+    return second;
 }
 
 /*
@@ -204,7 +224,7 @@ u4_t hal_ticks(void)
  */
 void hal_waitUntil(u4_t time)
 {
-    while (timer_get_counter(TIM2) < time) {
+    while (hal_ticks() < time) {
         ;
     }
 }
@@ -216,7 +236,7 @@ void hal_waitUntil(u4_t time)
  */
 u1_t hal_checkTimer(u4_t targettime)
 {
-    return timer_get_counter(TIM2) >= targettime;
+    return hal_ticks() >= targettime;
 }
 
 /*
