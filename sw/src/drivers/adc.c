@@ -68,7 +68,7 @@ uint16_t Adcd_ReadMv(uint8_t channel)
 uint16_t Adcd_ReadVccMv(void)
 {
     uint16_t raw = Adcd_ReadRaw(ADC_INT_REF_CHANNEL);
-    return (3300 * ((uint32_t ) VREFINT_CAL))/raw;
+    return 3300U * VREFINT_CAL/raw;
 }
 
 int16_t Adcd_ReadTempDegC(void)
@@ -94,15 +94,16 @@ void Adcd_Init(void)
     rcc_periph_clock_enable(RCC_ADC);
 
     adc_power_off(ADC1);
+    adc_enable_temperature_sensor();
+    adc_enable_vrefint();
     adc_set_clk_source(ADC1, ADC_CLKSOURCE_ADC);
-    adc_calibrate(ADC1);
+    adc_set_sample_time_on_all_channels(ADC1, ADC_SMPTIME_071DOT5);
+    adc_set_resolution(ADC1, ADC_RESOLUTION_12BIT);
     adc_set_operation_mode(ADC1, ADC_MODE_SCAN);
     adc_disable_external_trigger_regular(ADC1);
     adc_set_right_aligned(ADC1);
-    adc_enable_temperature_sensor();
-    adc_set_sample_time_on_all_channels(ADC1, ADC_SMPTIME_071DOT5);
-    adc_set_resolution(ADC1, ADC_RESOLUTION_12BIT);
     adc_disable_analog_watchdog(ADC1);
+    adc_calibrate(ADC1);
     adc_power_on(ADC1);
 
     /* Wait for ADC starting up. */
