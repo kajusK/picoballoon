@@ -53,22 +53,22 @@ void onEvent (ev_t ev) {
     printf("\n\r");
     switch(ev) {
         case EV_SCAN_TIMEOUT:
-            printf("EV_SCAN_TIMEOUT");
+            puts("EV_SCAN_TIMEOUT");
             break;
         case EV_BEACON_FOUND:
-            printf("EV_BEACON_FOUND");
+            puts("EV_BEACON_FOUND");
             break;
         case EV_BEACON_MISSED:
-            printf("EV_BEACON_MISSED");
+            puts("EV_BEACON_MISSED");
             break;
         case EV_BEACON_TRACKED:
-            printf("EV_BEACON_TRACKED");
+            puts("EV_BEACON_TRACKED");
             break;
         case EV_JOINING:
-            printf("EV_JOINING");
+            puts("EV_JOINING");
             break;
         case EV_JOINED:
-            printf("EV_JOINED");
+            puts("EV_JOINED");
             /*
              * Disable link check validation (automatically enabled
              * during join, but not supported by TTN at this time).
@@ -76,43 +76,47 @@ void onEvent (ev_t ev) {
             LMIC_setLinkCheckMode(0);
             break;
         case EV_RFU1:
-            printf("EV_RFU1");
+            puts("EV_RFU1");
             break;
         case EV_JOIN_FAILED:
-            printf("EV_JOIN_FAILED");
+            puts("EV_JOIN_FAILED");
             break;
         case EV_REJOIN_FAILED:
-            printf("EV_REJOIN_FAILED");
+            puts("EV_REJOIN_FAILED");
             break;
         case EV_TXCOMPLETE:
-            printf("EV_TXCOMPLETE + RX complete ");
+            puts("EV_TXCOMPLETE + RX complete ");
             if (LMIC.txrxFlags & TXRX_ACK) {
-                printf("Received ack ");
+                puts("Received ack ");
             }
             if (LMIC.dataLen) {
-                printf("Received %d bytes", LMIC.dataLen);
+                printf("Received %d bytes\n", LMIC.dataLen);
+                for (int i = 0; i < LMIC.dataLen; i++) {
+                    printf("%x ", LMIC.frame[LMIC.dataBeg+1]);
+                }
+                putchar('\n');
             }
             // Schedule next transmission
             //os_setTimedCallback(&sendjob, os_getTime()+sec2osticks(TX_INTERVAL), do_send);
             break;
         case EV_LOST_TSYNC:
-            printf("EV_LOST_TSYNC");
+            puts("EV_LOST_TSYNC");
             break;
         case EV_RESET:
-            printf("EV_RESET");
+            puts("EV_RESET");
             break;
         case EV_RXCOMPLETE:
             /* data received in ping slot */
-            printf("EV_RXCOMPLETE");
+            puts("EV_RXCOMPLETE");
             break;
         case EV_LINK_DEAD:
-            printf("EV_LINK_DEAD");
+            puts("EV_LINK_DEAD");
             break;
         case EV_LINK_ALIVE:
-            printf("EV_LINK_ALIVE");
+            puts("EV_LINK_ALIVE");
             break;
          default:
-            printf("Unknown event");
+            puts("Unknown event");
             break;
     }
 }
@@ -153,23 +157,7 @@ void Lora_PowerOff(void)
 void Lora_PowerOn(void)
 {
     LMIC_reset();
-
-    LMIC_setupChannel(0, 868100000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);
-    LMIC_setupChannel(1, 868300000, DR_RANGE_MAP(DR_SF12, DR_SF7B), BAND_CENTI);
-    LMIC_setupChannel(2, 868500000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);
-    LMIC_setupChannel(3, 867100000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);
-    LMIC_setupChannel(4, 867300000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);
-    LMIC_setupChannel(5, 867500000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);
-    LMIC_setupChannel(6, 867700000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);
-    LMIC_setupChannel(7, 867900000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);
-    LMIC_setupChannel(8, 868800000, DR_RANGE_MAP(DR_FSK, DR_FSK), BAND_MILLI);
-
-    LMIC_setLinkCheckMode(0);
-    /* TTN uses SF9 for its RX2 window. */
-    LMIC.dn2Dr = DR_SF9;
-
-    /* Set data rate and transmit power for uplink */
-    LMIC_setDrTxpow(DR_SF7, 20);
+    LMIC_setClockError(MAX_CLOCK_ERROR * 50 / 100);
 }
 
 void Lora_Init(void)
