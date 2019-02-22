@@ -4,3 +4,6 @@
 [submodule "sw/external/arduino-lmic"]
 	path = sw/external/arduino-lmic
 	url = https://github.com/matthijskooijman/arduino-lmic.git
+[submodule "sw/external/minmea"]
+	path = sw/external/minmea
+	url = https://github.com/kosma/minmea.git

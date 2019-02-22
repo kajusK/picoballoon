@@ -84,7 +84,14 @@ void usart2_isr(void)
     }
 
     data = usart_recv(USART2);
-    GPS_Process((char) data);
+    //TODO remove
+    putchar(data);
+    Gps_ProcessChar((char) data);
+    /*
+     * There seems to be a buf, event if the flag is cleared by
+     * reading the data, interrupt retriggers for some reason...
+     */
+    USART_ICR(USART2) = (uint32_t) -1;
 }
 
 static void GPSd_Write(const uint8_t *data, uint16_t len)
