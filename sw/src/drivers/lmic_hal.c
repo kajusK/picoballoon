@@ -52,7 +52,8 @@ void exti4_15_isr(void)
     if (exti_get_flag_status(EXT_DIO0)) {
         exti_reset_request(EXT_DIO0);
         radio_irq_handler(0);
-    } else if (exti_get_flag_status(EXT_DIO1)) {
+    }
+    if (exti_get_flag_status(EXT_DIO1)) {
         exti_reset_request(EXT_DIO1);
         radio_irq_handler(1);
     }
