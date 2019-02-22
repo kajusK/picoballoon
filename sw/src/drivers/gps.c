@@ -84,8 +84,6 @@ void usart2_isr(void)
     }
 
     data = usart_recv(USART2);
-    //TODO remove
-    putchar(data);
     Gps_ProcessChar((char) data);
     /*
      * There seems to be a buf, event if the flag is cleared by
