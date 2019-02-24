@@ -20,6 +20,8 @@
  * SOFTWARE.
  */
 #include <inttypes.h>
+#include <string.h>
+
 #include "drivers/systick.h"
 #include "gps.h"
 
@@ -85,6 +87,12 @@ bool Gps_GotFix(void)
         return true;
     }
     return false;
+}
+
+void Gps_FixClear(void)
+{
+    fix_time = 0;
+    memset(&gga_frame, 0, sizeof(gga_frame));
 }
 
 struct minmea_sentence_gga *Gps_GetGga(void)

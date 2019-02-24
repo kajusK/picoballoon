@@ -29,6 +29,10 @@
 
 extern bool Gps_ProcessChar(char c);
 extern bool Gps_GotFix(void);
+/**
+ * Remove the fix info - e.g. efter waking up from a long sleep
+ */
+extern void Gps_FixClear(void);
 extern struct minmea_sentence_gga *Gps_GetGga(void);
 
 #endif
