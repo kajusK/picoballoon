@@ -22,6 +22,7 @@
 
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/gpio.h>
+#include <libopencm3/stm32/pwr.h>
 
 #include "drivers/power.h"
 
@@ -32,14 +33,25 @@
 void Powerd_ShutDown(void)
 {
     rcc_periph_clock_enable(RCC_LATCH);
-    gpio_mode_setup(PORT_LATCH, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, PIN_LATCH);
+    gpio_mode_setup(PORT_LATCH, GPIO_MODE_OUTPUT, GPIO_PUPD_PULLUP, PIN_LATCH);
     gpio_clear(PORT_LATCH, PIN_LATCH);
-    while (1)
+
+    /* Should be dead already, or at leas should die very soon, if not, wdg
+     * will do the rest */
+    while (1) {
         ;
+    }
 }
 
 void Powerd_Sleep(uint32_t time_ms)
 {
+    //RTC alarm wakes up from sleep mode by alarm
+    //EXTI17 must be set to rising edge
+    //
+    //sleep on exit set
 
+    rcc_periph_clock_enable(RCC_PWR);
+    pwr_set_stop_mode();
+    pwr_voltage_regulator_low_power_in_stop();
+    __asm volatile ("wfi");
 }
-

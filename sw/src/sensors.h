@@ -43,8 +43,13 @@ extern uint16_t Sensors_GetSolarMv(void);
 extern uint16_t Sensors_GetCapMv(void);
 
 /**
- * Initialize sensors
+ * Initialize ADC pins
  */
-extern void Sensors_Init(void);
+extern void Sensors_PinsInit(void);
+
+/**
+ * Initialize Pressure module
+ */
+extern void Sensors_PressureInit(void);
 
 #endif

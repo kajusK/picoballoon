@@ -20,6 +20,7 @@
  * SOFTWARE.
  */
 
+#include <stdio.h>
 #include <stdlib.h>
 #include "drivers/systick.h"
 #include "drivers/adc.h"
@@ -59,9 +60,9 @@ static const int16_t lmt87_lookup[][2] = {
 
 static uint16_t ms5607_calib[6];
 
-static void Sensorsi_MS5607Cmd(uint8_t cmd, uint8_t *buf, uint8_t len)
+static bool Sensorsi_MS5607Cmd(uint8_t cmd, uint8_t *buf, uint8_t len)
 {
-    I2Cd_Transceive(MS5607_ADDR, &cmd, 1, buf, len);
+    return I2Cd_Transceive(MS5607_ADDR, &cmd, 1, buf, len);
 }
 
 int32_t Sensors_TempDegC(void)
@@ -154,15 +155,24 @@ uint16_t Sensors_GetCapMv(void)
     return Adcd_ReadMv(AD_CHANNEL_SUPERCAP);
 }
 
-void Sensors_Init(void)
+void Sensors_PinsInit(void)
 {
     Adcd_SetAnalog(GPIOA, 1 << AD_CHANNEL_SUPERCAP);
     Adcd_SetAnalog(GPIOA, 1 << AD_CHANNEL_SOLAR);
     Adcd_SetAnalog(GPIOA, 1 << AD_CHANNEL_TEMP);
+}
+
+void Sensors_PressureInit(void)
+{
+    bool ret;
 
     /** Read calibration data for pressure calculations */
     for (int i = 0; i < 6; i++) {
-        Sensorsi_MS5607Cmd(MS5607_CMD_PROM + (i << 1),
+        ret = Sensorsi_MS5607Cmd(MS5607_CMD_PROM + (i << 1),
                 (uint8_t *) &ms5607_calib[i], 2);
+        if (ret == false) {
+            puts("Failed to read pressure table");
+            return;
+        }
     }
 }

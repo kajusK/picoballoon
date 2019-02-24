@@ -20,57 +20,20 @@
  * SOFTWARE.
  */
 
-#ifndef __DRIVERS_ADC_H_
-#define __DRIVERS_ADC_H_
+#ifndef __MAIN_H_
+#define __MAIN_H_
 
 #include <inttypes.h>
-#include <libopencm3/stm32/gpio.h>
+#include <stdbool.h>
 
 /**
- * Set pin as analog input
+ * Cut power to all systems
  */
-extern void Adcd_SetAnalog(uint32_t port, uint16_t gpios);
+extern void Sys_Shutdown(void);
 
 /**
- * Read the raw 12 bit data from adc conversion
+ * Go to sleep mode for extended period of time, kill all modules around
  */
-extern uint16_t Adcd_ReadRaw(uint8_t channel);
-
-/**
- * Read voltage on the channel in mV
- */
-extern uint16_t Adcd_ReadMv(uint8_t channel);
-
-/**
- * Read power supply voltage
- */
-extern uint16_t Adcd_ReadVccMv(void);
-
-/**
- * Read core temeperature in degrees C
- */
-extern int16_t Adcd_ReadTempDegC(void);
-
-/**
- * Update reference voltage from internal reference measurements
- *
- * Should be called from time to time in vdda is not very stable
- */
-extern void Adcd_UpdateVdda(void);
-
-/**
- * Put adc peripheral to low power mode
- */
-extern void Adcd_Sleep(void);
-
-/**
- * Put adc peripheral to normal mode
- */
-extern void Adcd_Wakeup(void);
-
-/**
- * Initialize the adc driver
- */
-extern void Adcd_Init(void);
+extern void Sys_Sleep(uint32_t sleep_s);
 
 #endif

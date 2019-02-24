@@ -22,6 +22,8 @@
 
 #include <inttypes.h>
 #include <stdio.h>
+#include <libopencm3/stm32/rcc.h>
+#include <libopencm3/stm32/gpio.h>
 
 #include "drivers/wdg.h"
 #include "drivers/systick.h"
@@ -30,151 +32,19 @@
 #include "drivers/stdout.h"
 #include "drivers/i2c.h"
 #include "drivers/power.h"
+#include "drivers/rtc.h"
 #include "gps.h"
 #include "sensors.h"
 #include "lora.h"
-
-/** Allowed ranges for core voltage */
-#define CORE_MV_MIN 3000
-#define CORE_MV_MAX 3500
-
-/** Time to wait for gps fix before skipping the gps */
-#define MAX_GPS_FIX_WAIT_S 50
-
-/** Data sending period (if cap has enough charge to keep mcu on) - every 30 min */
-#define SENDING_PERIOD_S 1800
-
-/** If sent more than given amout of messages, do the hw reset */
-#define REBOOT_AFTER_CNT_MSG 10
+#include "probe.h"
+#include "main.h"
 
 /**
- * Critical voltage level that should cause mcu to kill all power and wait for
- * recharge
+ * Print out debug message containing all the sensors data
  */
-#define MIN_CAP_MV 900
-
-typedef struct {
-    uint8_t vcc_ok : 1; /* MCU Vcc in expected ranges */
-    uint8_t gps_fix : 1; /* We've got correct position */
-    uint8_t charging : 1; /* Sun is shining, supercap is being charged */
-    uint8_t msg_id : 6; /* Amount of messages sent since boot */
-} state_bf_t;
-
-typedef struct {
-    state_bf_t bf;
-    uint16_t cap_mv;    /* power supply voltage */
-    uint16_t pressure_dmbar; /* Pressure in deci mBar - 11002 = 1100,2 mBar */
-    int16_t temp_cc;    /* Temperature in centi deg C -5020 = -50,2 deg C */
-    int8_t temp_c;      /* Temperature from another sensor in deg C */
-    int8_t core_c;      /* Temperature of the system core */
-    uint16_t altitude_m; /* altitude from gps */
-}__attribute__((packed)) lora_msg_t;
-
-/** amount of messages already sent */
-static uint16_t probei_msg_sent = 0;
-
-/**
- * Cut the power input
- */
-static void Probe_ShutDown(void)
+static void Print_Debug(void)
 {
-    puts("Shutting down... Don't want do die yet, I'm too young!\n");
-    /* Wait for lora to send all remaining data */
-    while (!Lora_IsAllSent()) {
-        Lora_Update();
-    }
-    Powerd_ShutDown();
-}
-
-/**
- * Go to sleep mode for extended period of time, kill all modules around
- */
-static void Probe_Sleep(void)
-{
-    puts("Going to sleep. Good night.\n");
-    while (!Lora_IsAllSent()) {
-        Lora_Update();
-    }
-    GPSd_SetPower(false);
-    Lora_PowerOff();
-    Wdgd_Clear();
-
-    Powerd_Sleep(SENDING_PERIOD_S*1000U);
-
-    Wdgd_Clear();
-    Lora_PowerOn();
-    GPSd_SetPower(true);
-}
-
-/**
- * Send data over lora
- */
-static void Probe_Send(void)
-{
-    lora_msg_t msg;
-    uint32_t pressure;
-    int32_t temp;
-    uint16_t cap_mv = Sensors_GetCapMv();
-    uint16_t solar_mv = Sensors_GetSolarMv();
-    uint16_t core_mv = Adcd_ReadVccMv();
-    bool with_gps = GPS_get_data() != NULL;
-
-    printf("Sending packet %d\n", probei_msg_sent);
-
-    Sensors_PressurecMbar(&pressure, &temp);
-
-    msg.bf.vcc_ok = core_mv > CORE_MV_MIN && core_mv < CORE_MV_MAX;
-    msg.bf.charging = solar_mv > cap_mv;
-    msg.bf.gps_fix = with_gps;
-    msg.bf.msg_id = probei_msg_sent >= 64 ? 63 : probei_msg_sent;
-
-    msg.cap_mv = cap_mv;
-    msg.pressure_dmbar = pressure / 10;
-    msg.temp_cc = temp;
-    msg.temp_c = Sensors_TempDegC();
-    msg.core_c = Adcd_ReadTempDegC();
-
-    //TODO gps
-
-    Lora_Send((uint8_t *) &msg, sizeof(msg));
-    probei_msg_sent++;
-    puts("Sent\n");
-}
-
-/**
- * Main probe logic, try to send data if ready, else sleep or die
- */
-static void Probe_Loop(void)
-{
-    static uint32_t last_sent_time = 0;
-    bool timeouted = false;
-    uint16_t cap_mv = Sensors_GetCapMv();
-
-    /** Almost discharged, try to send data and die */
-    if (cap_mv < MIN_CAP_MV) {
-        puts("Supply almost dead, send and die\n");
-        Probe_Send();
-        Probe_ShutDown();
-    }
-
-    if ((millis() - last_sent_time) > MAX_GPS_FIX_WAIT_S*1000) {
-        printf("No GPS fix within specified period of time\n");
-        timeouted = true;
-    }
-
-    /* Have fix or timeouted, send data and go to sleep */
-    if (GPS_get_data() != NULL || timeouted) {
-        Probe_Send();
-        if (probei_msg_sent >= REBOOT_AFTER_CNT_MSG) {
-            Probe_ShutDown();
-        }
-        Probe_Sleep();
-        last_sent_time = millis();
-    }
-}
-
-static void Probe_Debug(void)
-{
+    struct minmea_sentence_gga *frame;
     uint16_t cap_mv = Sensors_GetCapMv();
     uint16_t solar_mv = Sensors_GetSolarMv();
     uint16_t core_mv = Adcd_ReadVccMv();
@@ -185,7 +55,7 @@ static void Probe_Debug(void)
 
     Sensors_PressurecMbar(&pressure, &temp);
 
-    puts("\n\n-----------\nProbe debug:\n");
+    puts("\n\n-----------\nProbe debug:");
     printf("Capacitor: %d mV\n", cap_mv);
     printf("Solar cell: %d mV\n", solar_mv);
     printf("Core voltage: %d mV\n", core_mv);
@@ -194,37 +64,101 @@ static void Probe_Debug(void)
     printf("Temperature: %ld C\n", temp / 100);
     printf("Temperature sensor: %d C\n", temp2);
 
-    if (GPS_get_data() == NULL) {
-        puts("GPS fig: No\n----------\n");
+    if (!Gps_GotFix()) {
+        puts("GPS fix: No\n----------");
         return;
     }
-    //TODO gps data
-    //
-    puts("-------------\n\n");
+
+    frame = Gps_GetGga();
+    printf("GPS fix: coordinates lat %f lon %f altitude %d\n",
+        minmea_tocoord(&frame->latitude),
+        minmea_tocoord(&frame->longitude),
+        (int) (frame->altitude.value / frame->altitude.scale));
+    puts("-------------\n");
+}
+
+/**
+ * Set all gpio as inputs with pullup
+ *
+ * Avoids floating pins to reduce power consumption
+ */
+static void Sysi_GpioDefault(void)
+{
+    rcc_periph_clock_enable(RCC_GPIOA);
+    rcc_periph_clock_enable(RCC_GPIOB);
+    rcc_periph_clock_enable(RCC_GPIOC);
+    rcc_periph_clock_enable(RCC_GPIOF);
+    gpio_mode_setup(GPIOA, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, 0xffff);
+    gpio_mode_setup(GPIOB, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, 0xffff);
+    gpio_mode_setup(GPIOC, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, 0xffff);
+    gpio_mode_setup(GPIOF, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, 0xffff);
+}
+
+static void Sysi_Init(void)
+{
+    Sysi_GpioDefault();
+
+    //Wdgd_Init();
+    Stdoutd_Init();
+    Systickd_Init();
+
+    Adcd_Init();
+    I2Cd_Init();
+//    RTCd_Init();
+
+    GPSd_Init();
+    Sensors_PinsInit();
+}
+
+void Sys_Sleep(uint32_t sleep_s)
+{
+    puts("Going to sleep. Good night.");
+    while (!Lora_IsAllSent()) {
+        Lora_Update();
+    }
+    GPSd_SetPower(false);
+    Lora_PowerOff();
+    Adcd_Sleep();
+    Wdgd_Clear();
+
+    Powerd_Sleep(sleep_s*60*1000U);
+
+    /** Reinitialize all peripherals after sleep mode */
+    Sysi_Init();
+    Wdgd_Clear();
+    Gps_FixClear();
+    Adcd_Wakeup();
+    Lora_PowerOn();
+    GPSd_SetPower(true);
+}
+
+void Sys_Shutdown(void)
+{
+    puts("Shutting down... Don't want do die yet, I'm too young!");
+    /* Wait for lora to send all remaining data */
+    while (!Lora_IsAllSent()) {
+        Lora_Update();
+    }
+    Powerd_ShutDown();
 }
 
 int main(void)
 {
-    Wdgd_Init();
-    Stdoutd_Init();
-    puts("Booting\n");
-    puts("Brno Observatory and Planetarium Pico Balloon Challange 2019\n");
-    puts("Team DeadBadger, Jakub Kaderka 2019\n");
-    puts("-------------------------\n");
+    Sysi_Init();
 
-    Systickd_Init();
-    Adcd_Init();
+    puts("Brno Observatory and Planetarium Pico Balloon Challange 2019");
+    puts("Team DeadBadger, Jakub Kaderka 2019");
+    puts("-------------------------");
 
-    GPSd_Init();
     GPSd_SetPowerSave();
     GPSd_SetPower(true);
-
-    I2Cd_Init();
-    Sensors_Init();
+    Sensors_PressureInit();
     Lora_Init();
 
     while (1) {
         Lora_Update();
+        //Print_Debug()
+        Adcd_UpdateVdda();
         Probe_Loop();
         Wdgd_Clear();
     }

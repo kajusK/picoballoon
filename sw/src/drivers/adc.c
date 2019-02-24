@@ -87,6 +87,20 @@ void Adcd_UpdateVdda(void)
     adcdi_vdda_mv = Adcd_ReadVccMv();
 }
 
+void Adcd_Sleep(void)
+{
+    adc_power_off(ADC1);
+    adc_disable_temperature_sensor();
+    adc_disable_vrefint();
+}
+
+void Adcd_Wakeup(void)
+{
+    adc_enable_temperature_sensor();
+    adc_enable_vrefint();
+    adc_power_on(ADC1);
+}
+
 void Adcd_Init(void)
 {
     int i;
