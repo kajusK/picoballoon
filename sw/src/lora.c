@@ -85,9 +85,10 @@ void onEvent (ev_t ev) {
             puts("EV_REJOIN_FAILED");
             break;
         case EV_TXCOMPLETE:
-            puts("EV_TXCOMPLETE + RX complete ");
+            puts("EV_TXCOMPLETE + RX complete");
+            printf("Frame counter %d\n", LMIC.txCnt);
             if (LMIC.txrxFlags & TXRX_ACK) {
-                puts("Received ack ");
+                puts("Received ack");
             }
             if (LMIC.dataLen) {
                 printf("Received %d bytes\n", LMIC.dataLen);
@@ -164,5 +165,6 @@ void Lora_Init(void)
 {
     os_init();
     Lora_PowerOn();
+    LMIC_startJoining();
 }
 
