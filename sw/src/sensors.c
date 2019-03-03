@@ -166,6 +166,8 @@ void Sensors_PressureInit(void)
 {
     bool ret;
 
+    Sensorsi_MS5607Cmd(MS5607_CMD_RESET, NULL, 0);
+
     /** Read calibration data for pressure calculations */
     for (int i = 0; i < 6; i++) {
         ret = Sensorsi_MS5607Cmd(MS5607_CMD_PROM + (i << 1),
