@@ -48,7 +48,7 @@
  * Critical voltage level that should cause mcu to kill all power and wait for
  * recharge
  */
-#define MIN_CAP_MV 900
+#define MIN_CAP_MV 1300
 
 typedef struct {
     uint8_t vcc_ok : 1; /* MCU Vcc in expected ranges */
@@ -127,13 +127,13 @@ void Probe_Loop(void)
     uint16_t cap_mv = Sensors_GetCapMv();
 
     /** Almost discharged, try to send data and die */
+    /*
     if (cap_mv < MIN_CAP_MV) {
         puts("Supply almost dead, send and die.");
         Probe_Send();
         Sys_Shutdown();
     }
-
-    //TODO sleep until gps fix received or timeouted or adc below limit
+    */
 
     if ((millis() - last_sent_time) > MAX_GPS_FIX_WAIT_S*1000) {
         printf("No GPS fix within specified period of time!");
