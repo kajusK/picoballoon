@@ -158,7 +158,7 @@ void Lora_PowerOff(void)
 void Lora_PowerOn(void)
 {
     LMIC_reset();
-    LMIC_setClockError(MAX_CLOCK_ERROR * 50 / 100);
+    LMIC_setClockError(MAX_CLOCK_ERROR * 90 / 100);
 }
 
 void Lora_Init(void)
