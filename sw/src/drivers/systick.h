@@ -29,5 +29,6 @@
 extern bool Systickd_Init(void);
 extern uint32_t millis(void);
 extern void delay_ms(uint32_t ms);
+extern void millis_add(uint32_t ms);
 
 #endif

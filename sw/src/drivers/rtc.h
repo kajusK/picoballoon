@@ -20,47 +20,18 @@
  * SOFTWARE.
  */
 
-#include <libopencm3/cm3/systick.h>
-#include <libopencm3/cm3/nvic.h>
-#include <libopencm3/stm32/rcc.h>
+#ifndef __DRIVERS_RTC_H
+#define __DRIVERS_RTC_H
 
-#include "systick.h"
+extern void RTCd_SetWakeup(uint32_t period_s);
 
-static volatile uint32_t elapsed_ms;
+/**
+ * Set alarm to occur in given amount of seconds.
+ *
+ * input must be lower than 60 secs
+ */
+extern void RTCd_SetAlarm(uint32_t alarm_in_s);
 
-void sys_tick_handler(void)
-{
-    elapsed_ms++;
-}
+extern void RTCd_Init(void);
 
-bool Systickd_Init(void)
-{
-    systick_clear();
-
-    if (!systick_set_frequency(1000, rcc_ahb_frequency))
-        return true;
-
-    systick_counter_enable();
-    systick_interrupt_enable();
-    return false;
-}
-
-uint32_t millis(void)
-{
-    return elapsed_ms;
-}
-
-void delay_ms(uint32_t ms)
-{
-    uint32_t start = millis();
-
-    while ((millis() - start) < ms) {
-        ;
-    }
-}
-
-void millis_add(uint32_t ms)
-{
-    uint32_t cur = millis();
-    elapsed_ms = cur + ms;
-}
+#endif

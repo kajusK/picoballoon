@@ -24,6 +24,11 @@
 #define __DRIVERS_POWER_H
 
 /**
+ * Hold latch pin up to avoid resetting while in operation
+ */
+extern void Powerd_Hold(void);
+
+/**
  * Shut down power to all modules including the mcu
  */
 extern void Powerd_ShutDown(void);

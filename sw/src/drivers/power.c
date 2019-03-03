@@ -23,6 +23,13 @@
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/pwr.h>
+#include <libopencm3/stm32/dbgmcu.h>
+#include <libopencm3/stm32/exti.h>
+#include <libopencm3/cm3/scb.h>
+#include <libopencm3/cm3/nvic.h>
+#include "drivers/rtc.h"
+#include "drivers/wdg.h"
+#include "drivers/systick.h"
 
 #include "drivers/power.h"
 
@@ -30,28 +37,44 @@
 #define PIN_LATCH GPIO8
 #define RCC_LATCH RCC_GPIOB
 
+#define SLEEP_TIME_S ((WDG_PERIOD_MS * 9) / 10)
+
 void Powerd_ShutDown(void)
 {
     rcc_periph_clock_enable(RCC_LATCH);
     gpio_mode_setup(PORT_LATCH, GPIO_MODE_OUTPUT, GPIO_PUPD_PULLUP, PIN_LATCH);
     gpio_clear(PORT_LATCH, PIN_LATCH);
 
-    /* Should be dead already, or at leas should die very soon, if not, wdg
+    /* Should be dead already, or at least should die very soon, if not, wdg
      * will do the rest */
     while (1) {
         ;
     }
 }
 
-void Powerd_Sleep(uint32_t time_ms)
+void Powerd_Sleep(uint32_t time_s)
 {
-    //RTC alarm wakes up from sleep mode by alarm
-    //EXTI17 must be set to rising edge
-    //
-    //sleep on exit set
+    uint32_t sec_passed = 0;
 
     rcc_periph_clock_enable(RCC_PWR);
+
     pwr_set_stop_mode();
     pwr_voltage_regulator_low_power_in_stop();
-    __asm volatile ("wfi");
+    DBGMCU_CR &= ~DBGMCU_CR_STOP;
+    SCB_SCR |= SCB_SCR_SLEEPDEEP | SCB_SCR_SLEEPONEXIT;
+
+    /* Unable to sleep for longer than wdg period */
+    while (sec_passed < time_s) {
+        uint32_t sleep_period;
+        if (time_s - sec_passed > SLEEP_TIME_S) {
+            sleep_period = SLEEP_TIME_S;
+        } else {
+            sleep_period = time_s - sec_passed;
+        }
+
+        RTCd_SetWakeup(sleep_period);
+        __asm volatile ("wfi");
+        Wdgd_Clear();
+        sec_passed += sleep_period;
+    }
 }

@@ -23,7 +23,7 @@
 #ifndef __DRIVERS_WDG_H
 #define __DRIVERS_WDG_H
 
-#define WDG_PERIOD_MS 10000
+#define WDG_PERIOD_MS 30000
 
 extern void Wdgd_Init(void);
 extern void Wdgd_Clear(void);
