@@ -82,8 +82,7 @@ bool Gps_ProcessChar(char c)
 
 bool Gps_GotFix(void)
 {
-    if (gga_frame.fix_quality > 0 &&
-             (millis() - fix_time) < (MAX_FIX_AGE_MIN*60*1000)) {
+    if (gga_frame.fix_quality > 0 && fix_time != 0) {
         return true;
     }
     return false;

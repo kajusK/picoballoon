@@ -117,7 +117,6 @@ static void Probe_Send(void)
 
     Lora_Send((uint8_t *) &msg, sizeof(msg));
     probei_msg_sent++;
-    puts("Sent");
 }
 
 void Probe_Loop(void)
@@ -127,26 +126,21 @@ void Probe_Loop(void)
     uint16_t cap_mv = Sensors_GetCapMv();
 
     /** Almost discharged, try to send data and die */
-    /*
     if (cap_mv < MIN_CAP_MV) {
         puts("Supply almost dead, send and die.");
         Probe_Send();
         Sys_Shutdown();
     }
-    */
 
     if ((millis() - last_sent_time) > MAX_GPS_FIX_WAIT_S*1000) {
-        printf("No GPS fix within specified period of time!");
+        puts("No GPS fix within specified period of time!");
         timeouted = true;
     }
 
     /* Have fix or timeouted, send data and go to sleep */
     if (Gps_GotFix() != false || timeouted) {
         Probe_Send();
-        if (probei_msg_sent >= REBOOT_AFTER_CNT_MSG) {
-            Sys_Shutdown();
-        }
-        Sys_Sleep(SENDING_PERIOD_S);
         last_sent_time = millis();
+        Sys_Shutdown();
     }
 }

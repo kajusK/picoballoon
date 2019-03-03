@@ -31,6 +31,8 @@ static const uint8_t appeui[8] = APPEUI;
 static const uint8_t devui[8] = DEVUI;
 static const uint8_t appkey[16] = APPKEY;
 
+static bool lorai_txdone = false;
+
 /*
  * Functions required by lmic library
  */
@@ -97,8 +99,7 @@ void onEvent (ev_t ev) {
                 }
                 putchar('\n');
             }
-            // Schedule next transmission
-            //os_setTimedCallback(&sendjob, os_getTime()+sec2osticks(TX_INTERVAL), do_send);
+            lorai_txdone = true;
             break;
         case EV_LOST_TSYNC:
             puts("EV_LOST_TSYNC");
@@ -124,22 +125,20 @@ void onEvent (ev_t ev) {
 
 bool Lora_Send(uint8_t *data, uint16_t len)
 {
-    /* Check if there is not a current TX/RX job running */
-    if (LMIC.opmode & OP_TXRXPEND) {
-        printf ("OP_TXRXPEND, not sending");
-        return false;
-    } else {
-        /* Prepare upstream data transmission at the next possible time */
-        LMIC_setTxData2(1, data, len, 0);
-        printf("Packet queued");
-        return true;
+    while (LMIC.opmode & OP_TXRXPEND) {
+        Lora_Update();
     }
-    /* Next TX is scheduled after TX_COMPLETE event. */
+
+    /* Prepare upstream data transmission at the next possible time */
+    LMIC_setTxData2(1, data, len, 0);
+    lorai_txdone = false;
+    puts("Packet queued");
+    return true;
 }
 
 bool Lora_IsAllSent(void)
 {
-    if (LMIC.opmode & OP_TXRXPEND) {
+    if (!(LMIC.opmode & OP_TXRXPEND) && lorai_txdone) {
         return true;
     }
     return false;

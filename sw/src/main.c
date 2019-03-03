@@ -70,7 +70,7 @@ static void Print_Debug(void)
     }
 
     frame = Gps_GetGga();
-    printf("GPS fix: coordinates lat %f lon %f altitude %d\n",
+    printf("GPS fix:\nlat %f\n lon %f\n altitude %d\n",
         minmea_tocoord(&frame->latitude),
         minmea_tocoord(&frame->longitude),
         (int) (frame->altitude.value / frame->altitude.scale));
@@ -88,7 +88,8 @@ static void Sysi_GpioDefault(void)
     rcc_periph_clock_enable(RCC_GPIOB);
     rcc_periph_clock_enable(RCC_GPIOC);
     rcc_periph_clock_enable(RCC_GPIOF);
-    gpio_mode_setup(GPIOA, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, 0xffff);
+    /* PA13 and 14 are swd */
+    gpio_mode_setup(GPIOA, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, 0xffff & (~(0x03 << 13)));
     gpio_mode_setup(GPIOB, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, 0xffff);
     gpio_mode_setup(GPIOC, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, 0xffff);
     gpio_mode_setup(GPIOF, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, 0xffff);
@@ -98,13 +99,13 @@ static void Sysi_Init(void)
 {
     Sysi_GpioDefault();
 
-    //Wdgd_Init();
+    Wdgd_Init();
+    RTCd_Init();
     Stdoutd_Init();
     Systickd_Init();
 
     Adcd_Init();
     I2Cd_Init();
-//    RTCd_Init();
 
     GPSd_Init();
     Sensors_PinsInit();
@@ -112,33 +113,42 @@ static void Sysi_Init(void)
 
 void Sys_Sleep(uint32_t sleep_s)
 {
-    puts("Going to sleep. Good night.");
+    puts("flushing lora");
     while (!Lora_IsAllSent()) {
         Lora_Update();
+        /* Wdg should be long enough for whole lora communication to avoid
+         * being locked here */
     }
+    puts("Going to sleep. Good night.");
     GPSd_SetPower(false);
     Lora_PowerOff();
     Adcd_Sleep();
-    Wdgd_Clear();
+    Sysi_GpioDefault();
 
-    Powerd_Sleep(sleep_s*60*1000U);
+    delay_ms(3000);
+    Powerd_Sleep(sleep_s);
+    Stdoutd_Init();
 
     /** Reinitialize all peripherals after sleep mode */
-    Sysi_Init();
     Wdgd_Clear();
+    Sysi_Init();
+    puts("Woken up");
     Gps_FixClear();
+    GPSd_SetPower(true);
     Adcd_Wakeup();
     Lora_PowerOn();
-    GPSd_SetPower(true);
 }
 
 void Sys_Shutdown(void)
 {
-    puts("Shutting down... Don't want do die yet, I'm too young!");
+    puts("flushing lora");
     /* Wait for lora to send all remaining data */
     while (!Lora_IsAllSent()) {
         Lora_Update();
+        /* Wdg should be long enough for whole lora communication to avoid
+         * being locked here */
     }
+    puts("Shutting down... Don't want do die yet, I'm too young!");
     Powerd_ShutDown();
 }
 
@@ -146,18 +156,18 @@ int main(void)
 {
     Sysi_Init();
 
+    puts("-------------------------");
     puts("Brno Observatory and Planetarium Pico Balloon Challange 2019");
     puts("Team DeadBadger, Jakub Kaderka 2019");
     puts("-------------------------");
 
-    GPSd_SetPowerSave();
     GPSd_SetPower(true);
+    GPSd_SetPowerSave();
     Sensors_PressureInit();
     Lora_Init();
 
     while (1) {
         Lora_Update();
-        //Print_Debug()
         Adcd_UpdateVdda();
         Probe_Loop();
         Wdgd_Clear();
