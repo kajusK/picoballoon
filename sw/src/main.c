@@ -141,6 +141,8 @@ void Sys_Sleep(uint32_t sleep_s)
 
 void Sys_Shutdown(void)
 {
+    GPSd_SetPower(false);
+    Adcd_Sleep();
     puts("flushing lora");
     /* Wait for lora to send all remaining data */
     while (!Lora_IsAllSent()) {

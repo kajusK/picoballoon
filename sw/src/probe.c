@@ -48,7 +48,7 @@
  * Critical voltage level that should cause mcu to kill all power and wait for
  * recharge
  */
-#define MIN_CAP_MV 1300
+#define MIN_CAP_MV 1400
 
 typedef struct {
     uint8_t vcc_ok : 1; /* MCU Vcc in expected ranges */
